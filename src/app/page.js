@@ -183,6 +183,7 @@ const LayerSelector = ({ product, activeCard, selectLayer }) => (
                   objectFit: "cover",
                   border: isSelected ? "2px solid #0070f3" : "1px solid #ccc",
                   cursor: "pointer",
+                  backgroundColor: isSelected ? "#e0f0ff" : "#fff",
                   opacity: isSelected ? 1 : 0.7
                 }}
                 onClick={() => selectLayer(layer, url)}
