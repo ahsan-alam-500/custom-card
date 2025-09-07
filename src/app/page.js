@@ -1,103 +1,197 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
 
-export default function Home() {
+const layers = [
+  "dresses",
+  "heads",
+  "hairstyles",
+  "crowns",
+  "beards", // starts unselected
+  "eyes",
+  "mouths",
+  "noses"
+];
+
+const ProductCustomizer = () => {
+  const [product, setProduct] = useState(null);
+  const [selectedLayers, setSelectedLayers] = useState({});
+  const [baseImage, setBaseImage] = useState(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const res = await fetch(
+        "https://momentocardgames.com/wp-json/wc/v3/products/87?consumer_key=ck_d7aa9d5d1cdec3b32c2c9ec878114e0b8b6cba1d&consumer_secret=cs_54cc2cfa5d2e6ee5bf221e42f8bca846cd8d50d1"
+      );
+      const data = await res.json();
+      setProduct(data);
+
+      const base = data.acf?.base_images?.[0];
+      if (base) setBaseImage(base.url || base);
+
+      // Initialize first item of each layer except 'beards'
+      const initialLayers = {};
+      layers.forEach((layer) => {
+        if (layer === "beards") return; // skip beards
+        const items = data.acf?.[layer] || [];
+        if (items.length > 0) {
+          initialLayers[layer] = items[0].url || items[0];
+        }
+      });
+      setSelectedLayers(initialLayers);
+    };
+    fetchProduct();
+  }, []);
+
+  if (!product) return <div>Loading...</div>;
+
+  const selectLayerImage = (layer, url) => {
+    setSelectedLayers((prev) => {
+      // Deselect if clicked again
+      if (prev[layer] === url) {
+        const updated = { ...prev };
+        delete updated[layer];
+        return updated;
+      }
+      return { ...prev, [layer]: url };
+    });
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div style={{ display: "flex", gap: "2rem", padding: "1rem" }}>
+      {/* Preview */}
+      <div
+        style={{
+          flex: 1,
+          position: "relative",
+          width: "400px",
+          height: "800px",
+          border: "1px solid #ddd",
+          borderRadius: "12px",
+          overflow: "hidden",
+          backgroundColor: "#fff",
+        }}
+      >
+        {/* Base image */}
+        {baseImage && (
+          <img
+            src={baseImage}
+            alt="Base Card"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+            }}
+          />
+        )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        {/* Other layers */}
+        {layers.map(
+          (layer) =>
+            selectedLayers[layer] && (
+              <div key={layer}>
+                {/* Top half */}
+                <img
+                  src={selectedLayers[layer]}
+                  alt={layer}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "55%",
+                    height: "50%",
+                    objectFit: "contain",
+                    paddingTop: "30px",
+                  }}
+                />
+                {/* Bottom half (mirrored) */}
+                <img
+                  src={selectedLayers[layer]}
+                  alt={`${layer}-mirrored`}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: "50%",
+                    transform: "translateX(-50%) scaleY(-1)",
+                    width: "55%",
+                    height: "50%",
+                    objectFit: "contain",
+                    paddingTop: "30px",
+                  }}
+                />
+              </div>
+            )
+        )}
+      </div>
+
+      {/* Controls */}
+      <div style={{ flex: 1, maxHeight: "800px", overflowY: "auto" }}>
+        <h2>{product.name}</h2>
+        <div dangerouslySetInnerHTML={{ __html: product.description }} />
+        <div dangerouslySetInnerHTML={{ __html: product.price_html }} />
+
+        {/* Base selector */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <h3>Base Image</h3>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            {(product.acf?.base_images || []).map((image, idx) => {
+              const url = image.url || image;
+              return (
+                <img
+                  key={idx}
+                  src={url}
+                  alt={`Base ${idx + 1}`}
+                  style={{
+                    width: "60px",
+                    height: "80px",
+                    objectFit: "cover",
+                    border:
+                      baseImage === url ? "2px solid #0070f3" : "1px solid #ccc",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setBaseImage(url)}
+                />
+              );
+            })}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Layer selectors */}
+        {layers.map((layer) => (
+          <div key={layer} style={{ marginBottom: "1.5rem" }}>
+            <h3 style={{ textTransform: "capitalize" }}>
+              {layer.replace("_", " ")}
+            </h3>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              {(product.acf?.[layer] || []).map((image, idx) => {
+                const url = image.url || image;
+                const isSelected = selectedLayers[layer] === url;
+                return (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`${layer} ${idx + 1}`}
+                    style={{
+                      width: "60px",
+                      height: "50px",
+                      objectFit: "cover",
+                      border: isSelected ? "2px solid #0070f3" : "1px solid #ccc",
+                      cursor: "pointer",
+                      opacity: isSelected ? 1 : 0.7,
+                    }}
+                    onClick={() => selectLayerImage(layer, url)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};
+
+export default ProductCustomizer;
