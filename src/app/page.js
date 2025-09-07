@@ -328,21 +328,23 @@ const ProductCustomizer = () => {
           </div>
         </div>
       </div>
-      <button
-        onClick={goToFinalView}
-        style={{
-          marginTop: "1rem",
-          padding: "10px 20px",
-          backgroundColor: "#0070f3",
-          color: "#fff",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          width: "100%"
-        }}
-      >
-        Finalize & View Cards
-      </button>
+      <div className="finalize-button bg-gray-100" style={{ textAlign: "center" }}>
+        <button
+          onClick={goToFinalView}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#0070f3",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+
+          className="max-w-[600px] mx-auto my-4"
+        >
+          Finalize & View Cards
+        </button>
+      </div>
     </>
   );
 };
