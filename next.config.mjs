@@ -4,4 +4,4 @@ const nextConfig = {
   experimental: { appDir: true },
 };
 
-module.exports = nextConfig;  // ✅ only this
+export default nextConfig;
