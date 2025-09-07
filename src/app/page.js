@@ -20,8 +20,9 @@ const ProductCustomizer = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       const res = await fetch(
-        "https://momentocardgames.com/wp-json/wc/v3/products/87?consumer_key=ck_d7aa9d5d1cdec3b32c2c9ec878114e0b8b6cba1d&consumer_secret=cs_54cc2cfa5d2e6ee5bf221e42f8bca846cd8d50d1"
+        `https://momentocardgames.com/wp-json/wc/v3/products/87?consumer_key=${process.env.NEXT_PUBLIC_WC_KEY}&consumer_secret=${process.env.NEXT_PUBLIC_WC_SECRET}`
       );
+
       const data = await res.json();
       setProduct(data);
 
