@@ -15,9 +15,8 @@ const layers = [
 const ProductCustomizer = () => {
   const [product, setProduct] = useState(null);
   const [cards, setCards] = useState([]); // All cards
-  const [activeCardIndex, setActiveCardIndex] = useState(0); // Currently edited card
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
 
-  // Fetch product
   useEffect(() => {
     const fetchProduct = async () => {
       const res = await fetch(
@@ -26,7 +25,6 @@ const ProductCustomizer = () => {
       const data = await res.json();
       setProduct(data);
 
-      // Initialize first card
       const base = data.acf?.base_images?.[0]?.url || data.acf?.base_images?.[0];
       const initialLayers = {};
       layers.forEach((layer) => {
@@ -34,6 +32,7 @@ const ProductCustomizer = () => {
         const items = data.acf?.[layer] || [];
         if (items.length > 0) initialLayers[layer] = items[0].url || items[0];
       });
+
       setCards([{ baseImage: base, selectedLayers: initialLayers }]);
       setActiveCardIndex(0);
     };
@@ -71,30 +70,72 @@ const ProductCustomizer = () => {
       if (items.length > 0) initialLayers[layer] = items[0].url || items[0];
     });
     setCards([...cards, { baseImage: base, selectedLayers: initialLayers }]);
-    setActiveCardIndex(cards.length); // switch to new card
+    setActiveCardIndex(cards.length);
+  };
+
+  // Generate a small thumbnail of a card
+  const CardThumbnail = ({ card }) => {
+    return (
+      <div
+        style={{
+          position: "relative",
+          width: "80px",
+          height: "160px",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          overflow: "hidden",
+          cursor: "pointer",
+          backgroundColor: "#fff"
+        }}
+      >
+        {card.baseImage && (
+          <img
+            src={card.baseImage}
+            alt="base"
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        )}
+        {layers.map(
+          (layer) =>
+            card.selectedLayers[layer] && (
+              <img
+                key={layer}
+                src={card.selectedLayers[layer]}
+                alt={layer}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover"
+                }}
+              />
+            )
+        )}
+      </div>
+    );
   };
 
   return (
     <div style={{ display: "flex", gap: "2rem", padding: "1rem" }}>
-      {/* Sidebar */}
-      <div style={{ width: "200px", borderRight: "1px solid #ddd", paddingRight: "1rem" }}>
+      {/* Sidebar with thumbnails */}
+      <div style={{ width: "120px", borderRight: "1px solid #ddd", paddingRight: "1rem" }}>
         <h3>Cards</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {cards.map((_, idx) => (
-            <button
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "center" }}>
+          {cards.map((card, idx) => (
+            <div
               key={idx}
               onClick={() => setActiveCardIndex(idx)}
               style={{
-                padding: "8px",
-                backgroundColor: idx === activeCardIndex ? "#0070f3" : "#fff",
-                color: idx === activeCardIndex ? "#fff" : "#000",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                cursor: "pointer"
+                border: idx === activeCardIndex ? "2px solid #0070f3" : "1px solid #ccc",
+                borderRadius: "6px",
+                padding: "2px",
+                transition: "border 0.2s"
               }}
             >
-              Card {idx + 1}
-            </button>
+              <CardThumbnail card={card} />
+            </div>
           ))}
         </div>
         <button
